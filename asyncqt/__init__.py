@@ -197,6 +197,8 @@ class _SimpleTimer(QtCore.QObject):
         super().__init__()
         self.__callbacks = {}
         self._stopped = False
+        self._in_callback = False
+        self._queued_handles = []
 
     def add_callback(self, handle, delay=0):
         timerid = self.startTimer(delay * 1000, timerType=QtCore.Qt.PreciseTimer)
@@ -222,8 +224,18 @@ class _SimpleTimer(QtCore.QObject):
                 if handle._cancelled:
                     self._logger.debug("Handle {} cancelled".format(handle))
                 else:
-                    self._logger.debug("Calling handle {}".format(handle))
-                    handle._run()
+                    if self._in_callback:
+                        self._logger.debug('!!! was already in callback: rescheduling')
+                        self._queued_handles.append(handle)
+                    else:
+                        self._logger.debug("Calling handle {}".format(handle))
+                        self._in_callback = True
+                        try:
+                            handle._run()
+                            while self._queued_handles:
+                                self._queued_handles.pop(0)._run()
+                        finally:
+                            self._in_callback = False
             finally:
                 del self.__callbacks[timerid]
                 handle = None

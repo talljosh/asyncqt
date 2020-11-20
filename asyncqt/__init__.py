@@ -276,15 +276,19 @@ class _QEventLoop:
         if set_running_loop:
             asyncio.events._set_running_loop(self)
 
-    def run_forever(self):
+    def run_forever(self, respect_qt_exit=False):
         """Run eventloop forever."""
         self.__is_running = True
         self._before_run_forever()
 
         try:
             self._logger.debug('Starting Qt event loop')
-            rslt = self.__app.exec_()
-            self._logger.debug('Qt event loop ended with result {}'.format(rslt))
+            while True:
+                rslt = self.__app.exec_()
+                self._logger.debug('Qt event loop ended with result {}'.format(rslt))
+                if respect_qt_exit or not self.__is_running:
+                    break
+                self._logger.debug('Restarting Qt event loop: stop() was not called')
             return rslt
         finally:
             self._after_run_forever()

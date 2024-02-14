@@ -197,8 +197,12 @@ class _SimpleTimer(QtCore.QObject):
         super().__init__()
         self.__callbacks = {}
         self._stopped = False
+        self._pending = []
+        self._in_timer = False
 
     def add_callback(self, handle, delay=0):
+        if delay < 0:
+            delay = 0
         timerid = self.startTimer(delay * 1000, timerType=QtCore.Qt.PreciseTimer)
         self._logger.debug("Registering timer id {0}".format(timerid))
         assert timerid not in self.__callbacks
@@ -223,11 +227,21 @@ class _SimpleTimer(QtCore.QObject):
                     self._logger.debug("Handle {} cancelled".format(handle))
                 else:
                     self._logger.debug("Calling handle {}".format(handle))
-                    handle._run()
+                    self._pending.append(handle)
             finally:
                 del self.__callbacks[timerid]
                 handle = None
             self.killTimer(timerid)
+
+            if not self._in_timer:
+                self._in_timer = True
+                try:
+                    while self._pending:
+                        handle = self._pending.pop(0)
+                        if not handle.cancelled():
+                            handle._run()
+                finally:
+                    self._in_timer = False
 
     def stop(self):
         self._logger.debug("Stopping timers")

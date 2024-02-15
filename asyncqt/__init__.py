@@ -201,7 +201,7 @@ class _SimpleTimer(QtCore.QObject):
         self._queued_handles = []
 
     def add_callback(self, handle, delay=0):
-        timerid = self.startTimer(delay * 1000, timerType=QtCore.Qt.PreciseTimer)
+        timerid = self.startTimer(max(delay, 0) * 1000, timerType=QtCore.Qt.PreciseTimer)
         self._logger.debug("Registering timer id {0}".format(timerid))
         assert timerid not in self.__callbacks
         self.__callbacks[timerid] = handle

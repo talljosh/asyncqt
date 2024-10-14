@@ -361,6 +361,7 @@ class _QEventLoop:
 
         for notifier in itertools.chain(self._read_notifiers.values(), self._write_notifiers.values()):
             notifier.setEnabled(False)
+            notifier.activated.disconnect()
 
         self._read_notifiers = None
         self._write_notifiers = None
@@ -430,6 +431,7 @@ class _QEventLoop:
             return False
         else:
             notifier.setEnabled(False)
+            notifier.activated.disconnect()     # Prevent memory leak
             return True
 
     def add_writer(self, fd, callback, *args):
@@ -466,6 +468,7 @@ class _QEventLoop:
             return False
         else:
             notifier.setEnabled(False)
+            notifier.activated.disconnect()     # Prevent memory leak
             return True
 
     def __notifier_cb_wrapper(self, notifiers, notifier, fd, callback, args):

@@ -40,12 +40,14 @@ else:
         QtModuleName = 'PyQt5'
     elif QtModuleName == 'pyside2':
         QtModuleName = 'PySide2'
+    elif QtModuleName == 'pyside6':
+        QtModuleName = 'PySide6'
 
     logger.info('Forcing use of {} as Qt Implementation'.format(QtModuleName))
     QtModule = importlib.import_module(QtModuleName)
 
 if not QtModule:
-    for QtModuleName in ('PyQt5', 'PySide2'):
+    for QtModuleName in ('PyQt5', 'PySide6', 'PySide2'):
         try:
             QtModule = importlib.import_module(QtModuleName)
         except ImportError:
@@ -62,6 +64,10 @@ QtGui = importlib.import_module(QtModuleName + '.QtGui', package=QtModuleName)
 if QtModuleName == 'PyQt5':
     from PyQt5 import QtWidgets
     from PyQt5.QtCore import pyqtSlot as Slot
+    QApplication = QtWidgets.QApplication
+elif QtModuleName == 'PySide6':
+    from PySide6 import QtWidgets
+    from PySide6.QtCore import Slot
     QApplication = QtWidgets.QApplication
 elif QtModuleName == 'PySide2':
     from PySide2 import QtWidgets
